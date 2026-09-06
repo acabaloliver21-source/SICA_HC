@@ -42,13 +42,7 @@ struct ContentView: View {
     }
 
     var body: some View {
-        Group {
-            if horizontalSizeClass == .regular {
-                regularLayout
-            } else {
-                compactLayout
-            }
-        }
+        MoonPlaceView()
         .tint(AppTheme.accent)
         .imageScale(.small)
         .onChange(of: patchDraftCoordinator.request?.id) { requestID in
