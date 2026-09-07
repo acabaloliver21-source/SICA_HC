@@ -44,6 +44,16 @@ enum SupabaseAuthenticationError: LocalizedError {
 final class SupabaseAuthenticationClient: MoonPlaceAuthenticationClient {
     private let configuration: SupabaseConfiguration
 
+    private static let sessionProfileKey = "moon.place.session.v1"
+    private static let accessTokenService = "moon.place.access-token"
+    private static let refreshTokenService = "moon.place.refresh-token"
+
+    struct StoredSessionProfile: Codable {
+        let username: String
+        let phone: String
+        let expiresAt: Date?
+    }
+
     init(configuration: SupabaseConfiguration = .moonPlace) {
         self.configuration = configuration
     }
@@ -55,6 +65,95 @@ final class SupabaseAuthenticationClient: MoonPlaceAuthenticationClient {
     func register(username: String, password: String, key: String, phone: String) async throws -> MoonPlaceAuthenticationResult {
         try await request(action: "register", username: username, password: password, key: key, phone: phone)
     }
+
+    // MARK: Session
+
+    func cachedSession() -> StoredSessionProfile? {
+        loadProfile()
+    }
+
+    /// Restores a stored session: returns the profile while an unexpired access
+    /// token exists, attempts a refresh otherwise, and clears the session when it
+    /// can no longer be restored.
+    func restoreSession() async -> MoonPlaceAuthenticationResult? {
+        guard let profile = loadProfile() else { return nil }
+        if let expiresAt = profile.expiresAt, expiresAt <= Date() {
+            clearSession(username: profile.username)
+            return nil
+        }
+        if let accessToken = KeychainTokenStore.load(service: Self.accessTokenService, account: profile.username),
+           !isExpired(jwt: accessToken) {
+            return MoonPlaceAuthenticationResult(
+                username: profile.username,
+                phone: profile.phone,
+                expiresAt: profile.expiresAt
+            )
+        }
+        guard let refreshToken = KeychainTokenStore.load(service: Self.refreshTokenService, account: profile.username) else {
+            clearSession(username: profile.username)
+            return nil
+        }
+        do {
+            try await refreshAccessToken(refreshToken: refreshToken, username: profile.username)
+            return MoonPlaceAuthenticationResult(
+                username: profile.username,
+                phone: profile.phone,
+                expiresAt: profile.expiresAt
+            )
+        } catch {
+            if case SupabaseAuthenticationError.server = error {
+                clearSession(username: profile.username)
+            }
+            return nil
+        }
+    }
+
+    func signOut(username: String) {
+        clearSession(username: username)
+    }
+
+    // MARK: Refresh
+
+    private func refreshAccessToken(refreshToken: String, username: String) async throws {
+        guard var components = URLComponents(
+            url: configuration.projectURL.appendingPathComponent("auth/v1/token"),
+            resolvingAgainstBaseURL: false
+        ) else {
+            throw SupabaseAuthenticationError.invalidResponse
+        }
+        components.queryItems = [URLQueryItem(name: "grant_type", value: "refresh_token")]
+        guard let endpoint = components.url else {
+            throw SupabaseAuthenticationError.invalidResponse
+        }
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.setValue(configuration.anonKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(configuration.anonKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: ["refresh_token": refreshToken])
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw SupabaseAuthenticationError.invalidResponse
+        }
+        let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        guard (200..<300).contains(httpResponse.statusCode) else {
+            throw SupabaseAuthenticationError.server(
+                object?["error_description"] as? String
+                    ?? object?["message"] as? String
+                    ?? "Session refresh failed."
+            )
+        }
+        guard let object,
+              let accessToken = object["access_token"] as? String,
+              let refreshedRefreshToken = object["refresh_token"] as? String else {
+            throw SupabaseAuthenticationError.invalidResponse
+        }
+        KeychainTokenStore.save(accessToken, service: Self.accessTokenService, account: username)
+        KeychainTokenStore.save(refreshedRefreshToken, service: Self.refreshTokenService, account: username)
+    }
+
+    // MARK: Request
 
     private func request(
         action: String,
@@ -96,11 +195,14 @@ final class SupabaseAuthenticationClient: MoonPlaceAuthenticationClient {
               let returnedUsername = object["username"] as? String,
               let returnedPhone = object["phone"] as? String,
               let expiresText = object["expires_at"] as? String,
-              let expiresAt = ISO8601DateFormatter().date(from: expiresText) else {
+              let expiresAt = Self.parseISODate(expiresText) else {
             throw SupabaseAuthenticationError.invalidResponse
         }
-        if let accessToken = object["access_token"] as? String {
-            KeychainTokenStore.save(accessToken, account: returnedUsername)
+        if let accessToken = object["access_token"] as? String,
+           let refreshToken = object["refresh_token"] as? String {
+            KeychainTokenStore.save(accessToken, service: Self.accessTokenService, account: returnedUsername)
+            KeychainTokenStore.save(refreshToken, service: Self.refreshTokenService, account: returnedUsername)
+            saveProfile(username: returnedUsername, phone: returnedPhone, expiresAt: expiresAt)
         }
         return MoonPlaceAuthenticationResult(
             username: returnedUsername,
@@ -108,16 +210,94 @@ final class SupabaseAuthenticationClient: MoonPlaceAuthenticationClient {
             expiresAt: expiresAt
         )
     }
+
+    // MARK: Profile
+
+    private func saveProfile(username: String, phone: String, expiresAt: Date?) {
+        let profile = StoredSessionProfile(username: username, phone: phone, expiresAt: expiresAt)
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        guard let data = try? encoder.encode(profile) else { return }
+        UserDefaults.standard.set(data, forKey: Self.sessionProfileKey)
+    }
+
+    private func loadProfile() -> StoredSessionProfile? {
+        guard let data = UserDefaults.standard.data(forKey: Self.sessionProfileKey) else { return nil }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try? decoder.decode(StoredSessionProfile.self, from: data)
+    }
+
+    private func clearSession(username: String) {
+        KeychainTokenStore.delete(service: Self.accessTokenService, account: username)
+        KeychainTokenStore.delete(service: Self.refreshTokenService, account: username)
+        UserDefaults.standard.removeObject(forKey: Self.sessionProfileKey)
+    }
+
+    // MARK: Tokens
+
+    private func isExpired(jwt token: String) -> Bool {
+        guard let expiration = jwtExpiration(token) else { return false }
+        return expiration <= Date()
+    }
+
+    private func jwtExpiration(_ token: String) -> Date? {
+        let segments = token.split(separator: ".")
+        guard segments.count == 3 else { return nil }
+        var base64 = String(segments[1])
+            .replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
+        while base64.count % 4 != 0 { base64.append("=") }
+        guard let data = Data(base64Encoded: base64),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let expiration = (object["exp"] as? NSNumber)?.doubleValue else {
+            return nil
+        }
+        return Date(timeIntervalSince1970: expiration)
+    }
+
+    private static func parseISODate(_ text: String) -> Date? {
+        let fractional = ISO8601DateFormatter()
+        fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = fractional.date(from: text) { return date }
+        let plain = ISO8601DateFormatter()
+        plain.formatOptions = [.withInternetDateTime]
+        return plain.date(from: text)
+    }
 }
 
 private enum KeychainTokenStore {
-    static func save(_ token: String, account: String) {
+    static func save(_ token: String, service: String, account: String) {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
             kSecAttrAccount as String: account,
             kSecValueData as String: Data(token.utf8)
         ]
         SecItemDelete(query as CFDictionary)
         SecItemAdd(query as CFDictionary, nil)
+    }
+
+    static func load(service: String, account: String) -> String? {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne
+        ]
+        var item: CFTypeRef?
+        guard SecItemCopyMatching(query as CFDictionary, &item) == errSecSuccess,
+              let data = item as? Data else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+
+    static func delete(service: String, account: String) {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account
+        ]
+        SecItemDelete(query as CFDictionary)
     }
 }

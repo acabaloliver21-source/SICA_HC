@@ -46,4 +46,4 @@ Then log in with the same username, password, and license. The function rejects 
 
 ## 5. Verify the response
 
-A successful request returns HTTP 200 with a Supabase access token and expiration data. The app stores only the access token in Keychain. HTTP 400 means invalid input, 401 means account/login failure, 403 means license failure, and 409 means the username or license is already used.
+A successful request returns HTTP 200 with a Supabase access token and expiration data. The app keeps the access and refresh tokens in Keychain and the profile in UserDefaults, restoring the session automatically on the next launch (refreshing the access token when needed). HTTP 400 means invalid input, 401 means account/login failure, 403 means license failure, and 409 means the username or license is already used.

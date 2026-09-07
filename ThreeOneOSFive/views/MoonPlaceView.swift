@@ -45,6 +45,7 @@ private enum MoonPlaceCatalog {
 @MainActor
 private final class MoonPlaceAuthStore: ObservableObject {
     @Published var isAuthenticated = false
+    @Published var isRestoring = false
     @Published var username = ""
     @Published var phone = ""
     @Published var expiresAt: Date?
@@ -52,6 +53,28 @@ private final class MoonPlaceAuthStore: ObservableObject {
     @Published var isWorking = false
 
     private let client = SupabaseAuthenticationClient()
+
+    init() {
+        guard let cached = client.cachedSession() else { return }
+        username = cached.username
+        phone = cached.phone
+        expiresAt = cached.expiresAt
+        isRestoring = true
+        Task { @MainActor [weak self] in
+            guard let self = self else { return }
+            if let restored = await self.client.restoreSession() {
+                self.username = restored.username
+                self.phone = restored.phone
+                self.expiresAt = restored.expiresAt
+                self.isAuthenticated = true
+            } else {
+                self.username = ""
+                self.phone = ""
+                self.expiresAt = nil
+            }
+            self.isRestoring = false
+        }
+    }
 
     func login(username: String, password: String, key: String) {
         guard !username.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
@@ -101,7 +124,12 @@ private final class MoonPlaceAuthStore: ObservableObject {
     }
 
     func logout() {
+        client.signOut(username: username)
+        username = ""
+        phone = ""
+        expiresAt = nil
         isAuthenticated = false
+        isRestoring = false
     }
 }
 
@@ -232,6 +260,14 @@ private struct MoonPlaceLoginView: View {
                 MoonPlaceSecureField(title: "PASSWORD", text: $password, icon: "lock.fill")
                 MoonPlaceField(title: "LICENSE KEY", text: $key, icon: "key.fill")
             }
+            if auth.isRestoring {
+                HStack(spacing: 8) {
+                    ProgressView().tint(.white)
+                    Text("RESTORING SESSION…")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(.white.opacity(0.8))
+                }
+            }
             Button {
                 auth.login(username: username, password: password, key: key)
             } label: {
@@ -242,7 +278,7 @@ private struct MoonPlaceLoginView: View {
                 }
             }
                 .buttonStyle(MoonPlacePrimaryButton())
-                .disabled(auth.isWorking)
+                .disabled(auth.isWorking || auth.isRestoring)
             Button("REGISTER NEW USER") { showRegister = true }
                 .foregroundStyle(.white.opacity(0.8))
                 .font(.subheadline.weight(.semibold))
