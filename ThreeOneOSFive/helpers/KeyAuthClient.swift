@@ -208,7 +208,7 @@ final class KeyAuthClient: MoonPlaceSessionBackend {
         let phone = subscriptions?.first?["subscription"] as? String ?? ""
         var expiresAt: Date?
         if let expiry = subscriptions?.first?["expiry"] {
-            let timestamp = (expiry as? NSNumber)?.doubleValue ?? Double(expiry as? String ?? "")
+            let timestamp = (expiry as? NSNumber)?.doubleValue ?? Double(expiry as? String ?? "") ?? 0
             if timestamp > 0 {
                 expiresAt = Date(timeIntervalSince1970: timestamp)
             }
