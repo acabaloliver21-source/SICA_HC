@@ -52,10 +52,11 @@ private final class MoonPlaceAuthStore: ObservableObject {
     @Published var errorMessage: String?
     @Published var isWorking = false
 
-    private let client = SupabaseAuthenticationClient()
+    private let client: any MoonPlaceSessionBackend
 
     init() {
-        guard let cached = client.cachedSession() else { return }
+        client = KeyAuthConfiguration.isConfigured ? KeyAuthClient() : SupabaseAuthenticationClient()
+        guard let cached = client.cachedProfile() else { return }
         username = cached.username
         phone = cached.phone
         expiresAt = cached.expiresAt

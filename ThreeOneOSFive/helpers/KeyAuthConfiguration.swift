@@ -24,6 +24,22 @@ struct MoonPlaceAuthenticationResult {
     let expiresAt: Date?
 }
 
+/// Aggregated backend protocol implemented by both the Supabase client and the
+/// KeyAuth client, so the Moon Place auth store can use either provider.
+protocol MoonPlaceSessionBackend {
+    func login(username: String, password: String, key: String) async throws -> MoonPlaceAuthenticationResult
+    func register(username: String, password: String, key: String, phone: String) async throws -> MoonPlaceAuthenticationResult
+    func cachedProfile() -> MoonPlaceStoredProfile?
+    func restoreSession() async -> MoonPlaceAuthenticationResult?
+    func signOut(username: String)
+}
+
+struct MoonPlaceStoredProfile: Codable {
+    let username: String
+    let phone: String
+    let expiresAt: Date?
+}
+
 enum SupabaseAuthenticationError: LocalizedError {
     case endpointNotConfigured
     case invalidResponse
@@ -41,18 +57,12 @@ enum SupabaseAuthenticationError: LocalizedError {
     }
 }
 
-final class SupabaseAuthenticationClient: MoonPlaceAuthenticationClient {
+final class SupabaseAuthenticationClient: MoonPlaceAuthenticationClient, MoonPlaceSessionBackend {
     private let configuration: SupabaseConfiguration
 
     private static let sessionProfileKey = "moon.place.session.v1"
     private static let accessTokenService = "moon.place.access-token"
     private static let refreshTokenService = "moon.place.refresh-token"
-
-    struct StoredSessionProfile: Codable {
-        let username: String
-        let phone: String
-        let expiresAt: Date?
-    }
 
     init(configuration: SupabaseConfiguration = .moonPlace) {
         self.configuration = configuration
@@ -68,7 +78,12 @@ final class SupabaseAuthenticationClient: MoonPlaceAuthenticationClient {
 
     // MARK: Session
 
-    func cachedSession() -> StoredSessionProfile? {
+    var isConfigured: Bool {
+        !configuration.projectURL.absoluteString.contains("YOUR_PROJECT_REF")
+            && !configuration.anonKey.contains("YOUR_SUPABASE_ANON_KEY")
+    }
+
+    func cachedProfile() -> MoonPlaceStoredProfile? {
         loadProfile()
     }
 
@@ -258,18 +273,18 @@ final class SupabaseAuthenticationClient: MoonPlaceAuthenticationClient {
     // MARK: Profile
 
     private func saveProfile(username: String, phone: String, expiresAt: Date?) {
-        let profile = StoredSessionProfile(username: username, phone: phone, expiresAt: expiresAt)
+        let profile = MoonPlaceStoredProfile(username: username, phone: phone, expiresAt: expiresAt)
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         guard let data = try? encoder.encode(profile) else { return }
         UserDefaults.standard.set(data, forKey: Self.sessionProfileKey)
     }
 
-    private func loadProfile() -> StoredSessionProfile? {
+    private func loadProfile() -> MoonPlaceStoredProfile? {
         guard let data = UserDefaults.standard.data(forKey: Self.sessionProfileKey) else { return nil }
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        return try? decoder.decode(StoredSessionProfile.self, from: data)
+        return try? decoder.decode(MoonPlaceStoredProfile.self, from: data)
     }
 
     private func clearSession(username: String) {

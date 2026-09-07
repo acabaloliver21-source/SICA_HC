@@ -48,6 +48,7 @@
 		3105M201 /* KeyAuthConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105M101; };
 		3105M202 /* BundledPatchInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105M102; };
 		3105M203 /* BundledPatches in Resources */ = {isa = PBXBuildFile; fileRef = 3105M103; };
+		3105N200 /* KeyAuthClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105N100; };
 		3105C200 /* PatchDraftService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105C100; };
 		3105C201 /* PatchDraftCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105C101; };
 		3105C202 /* FolderPatchSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105C102; };
@@ -141,6 +142,7 @@
 		3105M101 /* KeyAuthConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyAuthConfiguration.swift; sourceTree = "<group>"; };
 		3105M102 /* BundledPatchInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BundledPatchInstaller.swift; sourceTree = "<group>"; };
 		3105M103 /* BundledPatches */ = {isa = PBXFileReference; lastKnownFileType = folder; path = BundledPatches; sourceTree = "<group>"; };
+		3105N100 /* KeyAuthClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyAuthClient.swift; sourceTree = "<group>"; };
 		3105C100 /* PatchDraftService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatchDraftService.swift; sourceTree = "<group>"; };
 		3105C101 /* PatchDraftCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatchDraftCoordinator.swift; sourceTree = "<group>"; };
 		3105C102 /* FolderPatchSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderPatchSelectionView.swift; sourceTree = "<group>"; };
@@ -283,6 +285,7 @@
 				3105G103 /* PatchWorkspaceService.swift */,
 				3105M101 /* KeyAuthConfiguration.swift */,
 				3105M102 /* BundledPatchInstaller.swift */,
+				3105N100 /* KeyAuthClient.swift */,
 				3105H100 /* AppTabNavigationState.swift */,
 				3105C100 /* PatchDraftService.swift */,
 				3105C101 /* PatchDraftCoordinator.swift */,
@@ -426,6 +429,7 @@
 				3105M200,
 				3105M201,
 				3105M202,
+				3105N200,
 				3105C200,
 				3105C201,
 				3105C202,
