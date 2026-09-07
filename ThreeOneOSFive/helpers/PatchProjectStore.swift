@@ -52,6 +52,7 @@ final class PatchProjectStore: ObservableObject {
     private func finishInitialLoad(_ loadedItems: [PatchLibraryItem]) {
         items = loadedItems
         isBusy = false
+        importBundledPatchesIfNeeded()
     }
 
     func create(project: PatchProject, password: String?) {

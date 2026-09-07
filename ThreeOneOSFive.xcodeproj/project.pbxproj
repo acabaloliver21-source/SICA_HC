@@ -45,6 +45,9 @@
 		3105B221 /* PatchProjectsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105B121; };
 		3105B222 /* PatchProjectEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105B122; };
 		3105M200 /* MoonPlaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105M100; };
+		3105M201 /* KeyAuthConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105M101; };
+		3105M202 /* BundledPatchInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105M102; };
+		3105M203 /* BundledPatches in Resources */ = {isa = PBXBuildFile; fileRef = 3105M103; };
 		3105C200 /* PatchDraftService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105C100; };
 		3105C201 /* PatchDraftCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105C101; };
 		3105C202 /* FolderPatchSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105C102; };
@@ -135,6 +138,9 @@
 		3105B121 /* PatchProjectsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatchProjectsView.swift; sourceTree = "<group>"; };
 		3105B122 /* PatchProjectEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatchProjectEditorView.swift; sourceTree = "<group>"; };
 		3105M100 /* MoonPlaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonPlaceView.swift; sourceTree = "<group>"; };
+		3105M101 /* KeyAuthConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyAuthConfiguration.swift; sourceTree = "<group>"; };
+		3105M102 /* BundledPatchInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BundledPatchInstaller.swift; sourceTree = "<group>"; };
+		3105M103 /* BundledPatches */ = {isa = PBXFileReference; lastKnownFileType = folder; path = BundledPatches; sourceTree = "<group>"; };
 		3105C100 /* PatchDraftService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatchDraftService.swift; sourceTree = "<group>"; };
 		3105C101 /* PatchDraftCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatchDraftCoordinator.swift; sourceTree = "<group>"; };
 		3105C102 /* FolderPatchSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderPatchSelectionView.swift; sourceTree = "<group>"; };
@@ -194,6 +200,7 @@
 				3105A060 /* Info.plist */,
 				3105A020 /* App.swift */,
 				3105A021 /* ContentView.swift */,
+				3105M103 /* BundledPatches */,
 				3105A403 /* exploit */,
 				3105A404 /* views */,
 				3105A405 /* helpers */,
@@ -274,6 +281,8 @@
 				3105B119 /* PatchProjectLibrary.swift */,
 				3105B120 /* PatchProjectStore.swift */,
 				3105G103 /* PatchWorkspaceService.swift */,
+				3105M101 /* KeyAuthConfiguration.swift */,
+				3105M102 /* BundledPatchInstaller.swift */,
 				3105H100 /* AppTabNavigationState.swift */,
 				3105C100 /* PatchDraftService.swift */,
 				3105C101 /* PatchDraftCoordinator.swift */,
@@ -375,6 +384,7 @@
 			files = (
 				3105A211,
 				3105A228,
+				3105M203,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -414,6 +424,8 @@
 				3105B221,
 				3105B222,
 				3105M200,
+				3105M201,
+				3105M202,
 				3105C200,
 				3105C201,
 				3105C202,

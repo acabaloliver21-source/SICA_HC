@@ -83,6 +83,7 @@ struct ThreeOneOSFiveApp: App {
             .onAppear {
                 if !showOnboarding {
                     appState.detectSupport()
+                    patchStore.importBundledPatchesIfNeeded()
                     checkForUpdate()
                 }
             }

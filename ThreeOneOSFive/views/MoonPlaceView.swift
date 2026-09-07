@@ -42,25 +42,16 @@ private enum MoonPlaceCatalog {
     ]
 }
 
+@MainActor
 private final class MoonPlaceAuthStore: ObservableObject {
     @Published var isAuthenticated = false
     @Published var username = ""
     @Published var phone = ""
     @Published var expiresAt: Date?
     @Published var errorMessage: String?
+    @Published var isWorking = false
 
-    private let credentialsKey = "moon.place.credentials"
-
-    init() {
-        if let saved = UserDefaults.standard.dictionary(forKey: credentialsKey),
-           let savedUsername = saved["username"] as? String,
-           let savedPhone = saved["phone"] as? String,
-           let expires = saved["expiresAt"] as? Date {
-            username = savedUsername
-            phone = savedPhone
-            expiresAt = expires
-        }
-    }
+    private let client = SupabaseAuthenticationClient()
 
     func login(username: String, password: String, key: String) {
         guard !username.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
@@ -69,18 +60,17 @@ private final class MoonPlaceAuthStore: ObservableObject {
             errorMessage = "Enter your username, password and license key."
             return
         }
-        guard let saved = UserDefaults.standard.dictionary(forKey: credentialsKey),
-              saved["username"] as? String == username,
-              saved["password"] as? String == password,
-              saved["key"] as? String == key else {
-            errorMessage = "The credentials could not be verified on this device."
-            return
-        }
-        self.username = username
-        self.phone = saved["phone"] as? String ?? ""
-        self.expiresAt = saved["expiresAt"] as? Date
-        isAuthenticated = true
+        isWorking = true
         errorMessage = nil
+        Task { @MainActor [weak self] in
+            guard let self = self else { return }
+            do {
+                apply(try await client.login(username: username, password: password, key: key))
+            } catch {
+                isWorking = false
+                errorMessage = error.localizedDescription
+            }
+        }
     }
 
     func register(username: String, password: String, key: String, phone: String) {
@@ -88,15 +78,26 @@ private final class MoonPlaceAuthStore: ObservableObject {
             errorMessage = "Use a username, a password with 6+ characters and a valid key."
             return
         }
-        let expiration = Calendar.current.date(byAdding: .day, value: 30, to: Date())!
-        UserDefaults.standard.set([
-            "username": username,
-            "password": password,
-            "key": key,
-            "phone": phone,
-            "expiresAt": expiration
-        ], forKey: credentialsKey)
-        login(username: username, password: password, key: key)
+        isWorking = true
+        errorMessage = nil
+        Task { @MainActor [weak self] in
+            guard let self = self else { return }
+            do {
+                apply(try await client.register(username: username, password: password, key: key, phone: phone))
+            } catch {
+                isWorking = false
+                errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func apply(_ result: MoonPlaceAuthenticationResult) {
+        username = result.username
+        phone = result.phone
+        expiresAt = result.expiresAt
+        isAuthenticated = true
+        isWorking = false
+        errorMessage = nil
     }
 
     func logout() {
@@ -231,8 +232,17 @@ private struct MoonPlaceLoginView: View {
                 MoonPlaceSecureField(title: "PASSWORD", text: $password, icon: "lock.fill")
                 MoonPlaceField(title: "LICENSE KEY", text: $key, icon: "key.fill")
             }
-            Button("LOGIN") { auth.login(username: username, password: password, key: key) }
+            Button {
+                auth.login(username: username, password: password, key: key)
+            } label: {
+                if auth.isWorking {
+                    ProgressView().tint(.white)
+                } else {
+                    Text("LOGIN")
+                }
+            }
                 .buttonStyle(MoonPlacePrimaryButton())
+                .disabled(auth.isWorking)
             Button("REGISTER NEW USER") { showRegister = true }
                 .foregroundStyle(.white.opacity(0.8))
                 .font(.subheadline.weight(.semibold))
@@ -264,13 +274,16 @@ private struct MoonPlaceRegisterView: View {
                 Section {
                     Button("CREATE ACCOUNT") {
                         auth.register(username: username, password: password, key: key, phone: phone)
-                        if auth.isAuthenticated { dismiss() }
                     }
+                    .disabled(auth.isWorking)
                 }
                 if let error = auth.errorMessage { Text(error).foregroundStyle(.red) }
             }
             .navigationTitle("Register")
             .toolbar { Button("Close") { dismiss() } }
+            .onChange(of: auth.isAuthenticated) { isAuthenticated in
+                if isAuthenticated { dismiss() }
+            }
         }
     }
 }
