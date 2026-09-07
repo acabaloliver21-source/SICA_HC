@@ -8,11 +8,10 @@ struct KeyAuthConfiguration {
     let ownerID: String
     let version: String
     let apiURL: URL
-
     static let shared = KeyAuthConfiguration(
-        appName: "YOUR_APP_NAME",
-        ownerID: "YOUR_OWNER_ID",
-        version: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0",
+        appName: "moonexternal",
+        ownerID: "SQc5dKoope",
+        version: "1.0",
         apiURL: URL(string: "https://keyauth.win/api/1.2/")!
     )
 
@@ -138,7 +137,7 @@ final class KeyAuthClient: MoonPlaceSessionBackend {
         sessionID = sid
     }
     private func request(_ params: [String: String]) async throws -> [String: Any] {
-        guard configuration.isConfigured else { throw KeyAuthError.notConfigured }
+        guard KeyAuthConfiguration.isConfigured else { throw KeyAuthError.notConfigured }
 
         var components = URLComponents(url: configuration.apiURL, resolvingAgainstBaseURL: false)
         components?.queryItems = params
@@ -210,7 +209,7 @@ final class KeyAuthClient: MoonPlaceSessionBackend {
         var expiresAt: Date?
         if let expiry = subscriptions?.first?["expiry"] {
             let timestamp = (expiry as? NSNumber)?.doubleValue ?? Double(expiry as? String ?? "")
-            if let timestamp {
+            if timestamp > 0 {
                 expiresAt = Date(timeIntervalSince1970: timestamp)
             }
         }

@@ -6,9 +6,9 @@ struct SupabaseConfiguration {
     let anonKey: String
     let functionName: String
 
-    static let moonPlace = SupabaseConfiguration(
-        projectURL: URL(string: "https://YOUR_PROJECT_REF.supabase.co")!,
-        anonKey: "YOUR_SUPABASE_ANON_KEY",
+        static let moonPlace = SupabaseConfiguration(
+        projectURL: URL(string: "https://gurxeufdkvdhlvejyrhj.supabase.co")!,
+        anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1cnhldWZka3ZkaGx2ZWp5cmhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg3MzM4MDcsImV4cCI6MjEwNDMwOTgwN30.u0m_ngG_MgdSjsc1JIQw_YOtuSgG6gm8Znab_EUhcxw",
         functionName: "moon-auth"
     )
 }

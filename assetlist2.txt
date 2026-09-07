@@ -1,0 +1,4 @@
+AppIcon.appiconset
+Contents.json
+AppIcon-1024.png
+Contents.json
