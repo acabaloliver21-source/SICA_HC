@@ -132,7 +132,7 @@ final class SupabaseAuthenticationClient: MoonPlaceAuthenticationClient {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: ["refresh_token": refreshToken])
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await perform(request)
         guard let httpResponse = response as? HTTPURLResponse else {
             throw SupabaseAuthenticationError.invalidResponse
         }
@@ -166,6 +166,11 @@ final class SupabaseAuthenticationClient: MoonPlaceAuthenticationClient {
               !configuration.anonKey.contains("YOUR_SUPABASE_ANON_KEY") else {
             throw SupabaseAuthenticationError.endpointNotConfigured
         }
+        guard configuration.projectURL.scheme == "https" else {
+            throw SupabaseAuthenticationError.server(
+                "The Supabase project URL must use https:// (current value: \(configuration.projectURL.absoluteString))."
+            )
+        }
         let endpoint = configuration.projectURL
             .appendingPathComponent("functions")
             .appendingPathComponent("v1")
@@ -183,7 +188,7 @@ final class SupabaseAuthenticationClient: MoonPlaceAuthenticationClient {
             "phone": phone
         ])
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await perform(request)
         guard let httpResponse = response as? HTTPURLResponse else {
             throw SupabaseAuthenticationError.invalidResponse
         }
@@ -209,6 +214,45 @@ final class SupabaseAuthenticationClient: MoonPlaceAuthenticationClient {
             phone: returnedPhone,
             expiresAt: expiresAt
         )
+    }
+
+    // MARK: Transport
+
+    private func perform(_ request: URLRequest) async throws -> (Data, URLResponse) {
+        do {
+            return try await URLSession.shared.data(for: request)
+        } catch let error as URLError {
+            let host = request.url?.host ?? "unknown"
+            log("moon-auth: transport error \(error.code.rawValue) — \(error.localizedDescription) (\(host))")
+            switch error.code {
+            case .secureConnectionFailed:
+                throw SupabaseAuthenticationError.server(
+                    "Secure connection to \(host) failed (TLS). Verify the project URL is exactly https://<project-ref>.supabase.co and try again on another network (Wi-Fi/cellular)."
+                )
+            case .appTransportSecurityRequiresSecureConnection:
+                throw SupabaseAuthenticationError.server(
+                    "The connection to \(host) was blocked: the project URL must use https://."
+                )
+            case .cannotFindHost, .dnsLookupFailed:
+                throw SupabaseAuthenticationError.server(
+                    "The host \(host) could not be found. Check the project ref in the URL."
+                )
+            case .notConnectedToInternet:
+                throw SupabaseAuthenticationError.server(
+                    "There is no Internet connection."
+                )
+            case .timedOut:
+                throw SupabaseAuthenticationError.server(
+                    "The connection to \(host) timed out. Try again."
+                )
+            default:
+                throw SupabaseAuthenticationError.server(
+                    "Could not connect to \(host): \(error.localizedDescription)."
+                )
+            }
+        } catch {
+            throw error
+        }
     }
 
     // MARK: Profile

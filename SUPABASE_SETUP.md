@@ -47,3 +47,19 @@ Then log in with the same username, password, and license. The function rejects 
 ## 5. Verify the response
 
 A successful request returns HTTP 200 with a Supabase access token and expiration data. The app keeps the access and refresh tokens in Keychain and the profile in UserDefaults, restoring the session automatically on the next launch (refreshing the access token when needed). HTTP 400 means invalid input, 401 means account/login failure, 403 means license failure, and 409 means the username or license is already used.
+
+## 6. Troubleshooting: "A TLS error caused the connection to fail"
+
+This error means the device could not complete the secure connection to your Supabase host. Check, in order:
+
+1. **Project URL** — it must be exactly `https://<project-ref>.supabase.co` (from Project Settings → API → Project URL). No trailing slash, no extra path, no `http://`, and no typo. Do **not** use the dashboard URL (`supabase.com/dashboard/project/...`).
+2. **Anon key** — copy the **anon / publishable** key (never `service_role`) from Project Settings → API and remove any surrounding quotes or spaces.
+3. **Device date/time** — TLS certificate validation fails when the clock is wrong. Enable automatic date/time.
+4. **Network** — try Wi-Fi and then cellular. Corporate Wi-Fi, VPNs, antivirus, or carrier proxies that intercept TLS produce this error.
+5. **Endpoint reachability** — on the device open these in Safari:
+   - `https://<project-ref>.supabase.co/functions/v1/moon-auth` (expects an API error, not a TLS warning), and
+   - `https://<project-ref>.supabase.co/auth/v1/token?grant_type=refresh_token` (expects an error, not a TLS warning).
+   If Safari shows a certificate warning, your Supabase URL/ref is wrong or the network is intercepting TLS.
+6. **Function deployed** — without the deployed `moon-auth` function the app may show connection errors; redeploy with `supabase functions deploy moon-auth --no-verify-jwt`.
+
+The app also writes the failing host and the underlying connection error code to the built-in Log view, so the next build with those credentials will name the exact host that failed.
