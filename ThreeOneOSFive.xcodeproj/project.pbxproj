@@ -48,7 +48,10 @@
 		3105M201 /* KeyAuthConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105M101; };
 		3105M202 /* BundledPatchInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105M102; };
 		3105M203 /* BundledPatches in Resources */ = {isa = PBXBuildFile; fileRef = 3105M103; };
-		3105P200 /* FirebaseAuthenticationClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105P100; };
+				3105P200 /* FirebaseAuthenticationClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105P100; };
+		3105Q201 /* MoonPlaceTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105Q101; };
+		3105Q202 /* MoonPlaceWelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105Q102; };
+		3105Q203 /* MoonLogoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105Q103; };
 		3105C200 /* PatchDraftService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105C100; };
 		3105C201 /* PatchDraftCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105C101; };
 		3105C202 /* FolderPatchSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105C102; };
@@ -156,8 +159,10 @@
 		3105F104 /* WallpaperInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperInstaller.swift; sourceTree = "<group>"; };
 		3105F105 /* WallpaperLabService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperLabService.swift; sourceTree = "<group>"; };
 		3105F106 /* WallpaperLabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperLabView.swift; sourceTree = "<group>"; };
-		3105F108 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
-		3105G100 /* ZIPArchiveWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZIPArchiveWriter.swift; sourceTree = "<group>"; };
+				3105F108 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		3105Q101 /* MoonPlaceTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonPlaceTheme.swift; sourceTree = "<group>"; };
+		3105Q102 /* MoonPlaceWelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonPlaceWelcomeView.swift; sourceTree = "<group>"; };
+		3105Q103 /* MoonLogoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonLogoView.swift; sourceTree = "<group>"; };
 		3105G101 /* FileOperationCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileOperationCoordinator.swift; sourceTree = "<group>"; };
 		3105G102 /* ZIPArchiveExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZIPArchiveExtractor.swift; sourceTree = "<group>"; };
 		3105G103 /* PatchWorkspaceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PatchWorkspaceService.swift; sourceTree = "<group>"; };
@@ -254,6 +259,9 @@
 				3105L102 /* RepositoryMarketplaceView.swift */,
 				3105L103 /* RepositoryHomeView.swift */,
 				3105L104 /* RepositorySourcesView.swift */,
+			3105Q101 /* MoonPlaceTheme.swift */,
+			3105Q102 /* MoonPlaceWelcomeView.swift */,
+			3105Q103 /* MoonLogoView.swift */,
 			);
 			path = views;
 			sourceTree = "<group>";
@@ -427,6 +435,9 @@
 				3105B221,
 				3105B222,
 				3105M200,
+			3105Q201,
+			3105Q202,
+			3105Q203,
 				3105M201,
 				3105M202,
 				3105P200,
