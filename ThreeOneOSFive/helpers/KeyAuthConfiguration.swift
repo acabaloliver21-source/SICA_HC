@@ -6,7 +6,7 @@ struct SupabaseConfiguration {
     let anonKey: String
     let functionName: String
 
-        static let moonPlace = SupabaseConfiguration(
+    static let moonPlace = SupabaseConfiguration(
         projectURL: URL(string: "https://gurxeufdkvdhlvejyrhj.supabase.co")!,
         anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1cnhldWZka3ZkaGx2ZWp5cmhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg3MzM4MDcsImV4cCI6MjEwNDMwOTgwN30.u0m_ngG_MgdSjsc1JIQw_YOtuSgG6gm8Znab_EUhcxw",
         functionName: "moon-auth"
@@ -25,7 +25,7 @@ struct MoonPlaceAuthenticationResult {
 }
 
 /// Aggregated backend protocol implemented by both the Supabase client and the
-/// KeyAuth client, so the Moon Place auth store can use either provider.
+/// Firebase client, so the Moon Place auth store can use either provider.
 protocol MoonPlaceSessionBackend {
     func login(username: String, password: String, key: String) async throws -> MoonPlaceAuthenticationResult
     func register(username: String, password: String, key: String, phone: String) async throws -> MoonPlaceAuthenticationResult

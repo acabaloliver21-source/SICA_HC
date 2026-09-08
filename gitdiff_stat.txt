@@ -1,7 +1,0 @@
-warning: in the working copy of 'ThreeOneOSFive/helpers/KeyAuthClient.swift', CRLF will be replaced by LF the next time Git touches it
-warning: in the working copy of 'ThreeOneOSFive/helpers/KeyAuthConfiguration.swift', CRLF will be replaced by LF the next time Git touches it
- ThreeOneOSFive/Info.plist                         |  4 ++--
- ThreeOneOSFive/helpers/KeyAuthClient.swift        | 14 +++++++-------
- ThreeOneOSFive/helpers/KeyAuthConfiguration.swift |  6 +++---
- 3 files changed, 12 insertions(+), 12 deletions(-)
-DONE

@@ -55,7 +55,7 @@ private final class MoonPlaceAuthStore: ObservableObject {
     private let client: any MoonPlaceSessionBackend
 
     init() {
-        client = KeyAuthConfiguration.isConfigured ? KeyAuthClient() : SupabaseAuthenticationClient()
+        client = FirebaseAuthenticationClient.isConfigured ? FirebaseAuthenticationClient() : SupabaseAuthenticationClient()
         guard let cached = client.cachedProfile() else { return }
         username = cached.username
         phone = cached.phone
