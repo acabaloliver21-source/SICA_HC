@@ -1,0 +1,26 @@
+name: Build 3105 IPA
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build archive
+        run: |
+          xcodebuild -project ThreeOneOSFive.xcodeproj -scheme ThreeOneOSFive -sdk iphoneos -configuration Release -archivePath "$RUNNER_TEMP/3105.xcarchive" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" SKIP_INSTALL=NO
+      - name: Package unsigned IPA
+        run: |
+          mkdir -p "$RUNNER_TEMP/Payload"
+          cp -R "$RUNNER_TEMP/3105.xcarchive/Products/Applications/3105.app" "$RUNNER_TEMP/Payload/"
+          mkdir -p dist
+          cd "$RUNNER_TEMP"
+          zip -r -y "$GITHUB_WORKSPACE/dist/3105-unsigned.ipa" Payload
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: 3105-unsigned-ipa
+          path: dist/3105-unsigned.ipa
+          if-no-files-found: error
