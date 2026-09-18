@@ -17,7 +17,7 @@ jobs:
 
       - name: Build unsigned archive
         run: |
-          xcodebuild archive \
+          xcodebuild archive CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
             -project ThreeOneOSFive.xcodeproj \
             -scheme 3105 \
             -configuration Release \
